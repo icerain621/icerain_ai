@@ -1,0 +1,109 @@
+version: 1
+
+defaults:
+  engine: auto # 引擎：auto|agent-browser|goclaw-browser
+  connection: auto # 连接方式：auto|cdp|local
+
+  # 场景选择：
+  # - 推荐在 run DSL 中通过 `run.scenario` 指定
+  # - 场景库位于 `config/scenarios.yaml`
+  scenario:
+    defaultScenarioId: "public_read"
+
+  budgets:
+    timeoutMs: 180000
+    maxSteps: 24
+    maxSnapshots: 8
+    maxScreenshots: 3
+    maxActs: 40
+
+  allow:
+    actKinds: ["click", "type", "press", "hover", "wait", "evaluate"]
+    urlAllow:
+      - "https://"
+      - "http://"
+    urlDeny:
+      - "file://"
+      - "chrome://"
+      - "devtools://"
+
+  login:
+    mode: auto_then_manual # none|manual|auto|auto_then_manual
+    manual:
+      prompt: "请在浏览器中完成登录后确认。"
+      confirm:
+        signals: []
+    auto:
+      strategies: []
+
+  detect:
+    loginRequiredSignals:
+      - kind: snapshot_text_matches
+        value: "(?i)sign\\s*in|log\\s*in|login|register"
+    loggedInSignals: []
+    antiBotSignals:
+      - kind: snapshot_text_matches
+        value: "(?i)captcha|verify\\s+you\\s+are\\s+human|access\\s+denied|unusual\\s+traffic"
+
+  selectors:
+    hints: []
+
+  extract:
+    extractors: ["title", "meta", "mainText", "links", "tables", "forms"]
+    mainText:
+      maxChars: 20000
+
+  output:
+    format: both # 输出格式：markdown|json|both
+    # 模板一律采用 Markdown（见 `SKILL.md` → 输出约定）。
+    # format 包含 markdown：写入 reportPath。
+    # format 包含 json：写入 dataPath。
+    reportPath: "artifacts/report.md"
+    dataPath: "artifacts/data.json"
+    artifactsDir: "artifacts" # 产物目录
+    template: "default-report" # 输出模板（Markdown，默认对应 `templates/default-report.md`）
+
+  plugins:
+    enabled: []
+    registry: {}
+
+  modes:
+    read:
+      allowWriteActions: false
+      networkCapture:
+        enabled: false
+        maxCaptures: 12
+        maxBodyBytes: 200000
+        urlAllowPatterns: []
+        redactKeys: ["authorization", "cookie", "set-cookie", "x-api-key", "token", "password"]
+    write:
+      allowWriteActions: true
+      requirePostActionSnapshot: true
+
+  recording:
+    enabled: false
+    protocol:
+      confirmToken: "REC_NEXT"
+      finishToken: "REC_DONE"
+    output:
+      flowsDir: "skills/browser-tool/flows"
+      defaultInsertAfter: "ensureLogin"
+
+  agentBrowser:
+    # 集成说明：
+    # - 优先使用 PATH 中的 `agent-browser`。
+    # - 可选：用 `binary` 指定绝对路径。
+    # - 可选：用 `projectPath` 指向本地仓库，仅用于查找文档/模板。
+    enabled: true
+    binary: "agent-browser"   # 可执行名或绝对路径
+    projectPath: ""           # 本地仓库路径（可选）
+    preferAutoConnect: true
+    defaultSession: "default"
+    defaultProfile: ""
+    preflight:
+      required: false
+      # required=true 且 agent-browser 不可用：直接失败，不回退。
+      # 建议在混合环境保持 false，提高健壮性。
+      installHint: "安装：`npm i -g agent-browser && agent-browser install`"
+
+sites: []

@@ -1,0 +1,24 @@
+run:
+  mode: "read"
+  targetUrl: "https://example.com/login"
+  siteKey: "example.com"
+  login:
+    mode: "auto_then_manual"
+  steps:
+    - id: connect
+      kind: connect
+    - id: open
+      kind: open
+      with: { url: "${run.targetUrl}" }
+    - id: snap0
+      kind: snapshot
+      with: { compact: true, interactive: true, maxChars: 8000 }
+    - id: ensureLogin
+      kind: ensure_login
+    - id: snap1
+      kind: snapshot
+      with: { compact: true, interactive: true, maxChars: 8000 }
+    - id: extract
+      kind: extract
+    - id: report
+      kind: report

@@ -1,0 +1,76 @@
+version: 1
+
+siteKey: example.com
+
+match:
+  domains: ["example.com", "www.example.com"]
+  urlPrefixes: []
+  urlRegex: []
+
+connection: auto
+
+login:
+  mode: auto_then_manual
+  manual:
+    prompt: "请在已打开的浏览器标签页中完成登录，然后确认。"
+    confirm:
+      signals:
+        - kind: snapshot_text_includes
+          value: "退出"
+  auto:
+    strategies:
+      # 0) 复用登录态（如果你已经导出过 state）
+      - kind: storage_state
+        stateRef: "file:.goclaw/browser-states/example.com.json"
+
+      # 1) Cookie/header 注入（优先）
+      - kind: cookie
+        credentialRef: "env:EXAMPLE_COOKIE"
+        apply: "header" # header|evaluate
+
+      # 2) 表单登录（站点支持且稳定时启用）
+      - kind: form
+        credentialRef:
+          username: "env:EXAMPLE_USER"
+          password: "env:EXAMPLE_PASS"
+        fields:
+          usernameRefHint: { kind: by_text, value: "邮箱" }
+          passwordRefHint: { kind: by_text, value: "密码" }
+          submitRefHint:   { kind: by_role_name, role: "button", name: "登录" }
+
+detect:
+  loginRequiredSignals:
+    - kind: url_matches
+      value: "/login"
+    - kind: snapshot_text_matches
+      value: "登录|注册"
+  loggedInSignals:
+    - kind: snapshot_text_includes
+      value: "退出"
+  antiBotSignals:
+    - kind: snapshot_text_matches
+      value: "验证码|人机验证"
+
+selectors:
+  hints:
+    - kind: by_text
+      value: "登录"
+    - kind: by_text_regex
+      value: "使用谷歌继续|继续使用谷歌"
+
+extract:
+  extractors: ["title", "meta", "mainText", "links", "tables"]
+
+plugins:
+  enabled: []
+
+modes:
+  read:
+    networkCapture:
+      enabled: true
+      urlAllowPatterns:
+        - "^https://example\\.com/api/.*"
+      maxCaptures: 8
+      maxBodyBytes: 120000
+  write:
+    requirePostActionSnapshot: true

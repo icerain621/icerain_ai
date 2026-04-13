@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "goclaw.browser-tool.flow.schema.json",
+  "title": "browser-tool flow schema",
+  "type": "object",
+  "required": ["version", "flowId", "siteKey", "steps"],
+  "properties": {
+    "version": { "type": "integer" },
+    "flowId": { "type": "string" },
+    "siteKey": { "type": "string" },
+    "description": { "type": "string" },
+    "insertAfter": { "type": "string" },
+    "requires": {
+      "type": "object",
+      "properties": {
+        "mode": { "type": "string", "enum": ["read", "write", "mixed"] },
+        "allowActKinds": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["kind"],
+        "properties": {
+          "id": { "type": "string" },
+          "kind": { "type": "string" },
+          "mode": { "type": "string", "enum": ["read", "write"] },
+          "with": { "type": "object", "additionalProperties": true }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

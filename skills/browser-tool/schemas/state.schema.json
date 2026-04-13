@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "goclaw.browser-tool.state.schema.json",
+  "title": "browser-tool storage state schema",
+  "type": "object",
+  "properties": {
+    "version": { "type": "integer" },
+    "savedAt": { "type": "string" },
+    "url": { "type": "string" },
+    "siteKey": { "type": "string" },
+    "cookies": { "type": "string" },
+    "localStorage": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "sessionStorage": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "origins": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "origin": { "type": "string" },
+          "localStorage": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "value": { "type": "string" }
+              },
+              "required": ["name", "value"],
+              "additionalProperties": true
+            }
+          },
+          "sessionStorage": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "value": { "type": "string" }
+              },
+              "required": ["name", "value"],
+              "additionalProperties": true
+            }
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "cookiesArray": {
+      "description": "Playwright-style cookies field name is 'cookies' (array). Included here for tooling; executor reads raw JSON.",
+      "type": "array",
+      "items": { "type": "object" }
+    }
+  },
+  "additionalProperties": true
+}

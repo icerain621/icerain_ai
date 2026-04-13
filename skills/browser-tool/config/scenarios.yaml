@@ -1,0 +1,121 @@
+version: 1
+
+# 场景配置说明：
+# - 一个场景代表一套“可复用的运行配置”，可覆盖：登录、连接方式、输出模板、输出格式、预算等
+# - 用法 1：在 run DSL 中指定 `run.scenario: <scenarioId>`
+# - 用法 2：按 match 自动命中（可选），例如按 domain 或 url 前缀
+#
+# 合并优先级（高 → 低）：
+# run.scenario/ run.output/run.login/...（运行时显式覆盖）
+# → scenario（命中的场景）
+# → site（config/sites/<domain>.yaml）
+# → defaults（config/defaults.yaml）
+#
+# mode 说明：
+# - read：只采集/观察（snapshot/extract/capture_network 等），不允许写操作
+# - write：允许交互操作（write_actions/record_flow 等），可包含读步骤用于校验与证据
+# - mixed：同一次 run 内混合读写；运行 DSL 必须为每个 step 标注 step.mode=read|write
+
+scenarios:
+  - scenarioId: public_read
+    title: "公开页面采集"
+    priority: 10
+    match:
+      domains: []
+      urlPrefixes: []
+      urlRegex: []
+    engine: auto
+    connection: auto
+    mode: read
+    login:
+      mode: none
+    output:
+      format: markdown
+      template: default-report
+      reportPath: "artifacts/report.md"
+      dataPath: "artifacts/data.json"
+
+  - scenarioId: authenticated_read
+    title: "登录后采集（优先自动，失败回退手动）"
+    priority: 20
+    match:
+      domains: []
+      urlPrefixes: []
+      urlRegex: []
+    engine: auto
+    connection: auto
+    mode: read
+    login:
+      mode: auto_then_manual
+    output:
+      format: both
+      template: default-report
+      reportPath: "artifacts/auth-report.md"
+      dataPath: "artifacts/auth-data.json"
+
+  - scenarioId: write_form_submit
+    title: "写模式：填写并提交表单"
+    priority: 30
+    match:
+      domains: []
+      urlPrefixes: []
+      urlRegex: []
+    engine: auto
+    connection: auto
+    mode: write
+    login:
+      mode: none
+    modes:
+      write:
+        requirePostActionSnapshot: true
+    output:
+      format: markdown
+      template: default-report
+      reportPath: "artifacts/write-report.md"
+      dataPath: "artifacts/write-data.json"
+
+  - scenarioId: api_capture_read
+    title: "读模式：采集指定网络响应（尽量使用 agent-browser）"
+    priority: 40
+    match:
+      domains: []
+      urlPrefixes: []
+      urlRegex: []
+    engine: agent-browser
+    connection: auto
+    mode: read
+    login:
+      mode: auto_then_manual
+    modes:
+      read:
+        networkCapture:
+          enabled: true
+          maxCaptures: 8
+          maxBodyBytes: 120000
+          urlAllowPatterns: []
+    output:
+      format: json
+      template: default-report
+      reportPath: "artifacts/api-report.md"
+      dataPath: "artifacts/api-data.json"
+
+  - scenarioId: mixed_read_write
+    title: "读写混合：先读采集，再写操作，再读校验"
+    priority: 35
+    match:
+      domains: []
+      urlPrefixes: []
+      urlRegex: []
+    engine: auto
+    connection: auto
+    mode: mixed
+    login:
+      mode: auto_then_manual
+    modes:
+      write:
+        requirePostActionSnapshot: true
+    output:
+      format: both
+      template: default-report
+      reportPath: "artifacts/mixed-report.md"
+      dataPath: "artifacts/mixed-data.json"

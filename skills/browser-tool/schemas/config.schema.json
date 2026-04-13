@@ -1,0 +1,169 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "goclaw.browser-tool.config.schema.json",
+  "title": "browser-tool config schema (defaults/scenarios/sites)",
+  "type": "object",
+  "oneOf": [
+    { "$ref": "#/$defs/defaultsFile" },
+    { "$ref": "#/$defs/scenariosFile" },
+    { "$ref": "#/$defs/siteFile" }
+  ],
+  "$defs": {
+    "signal": {
+      "type": "object",
+      "required": ["kind", "value"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "snapshot_text_includes",
+            "snapshot_text_matches",
+            "url_includes",
+            "url_matches",
+            "console_includes"
+          ]
+        },
+        "value": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "output": {
+      "type": "object",
+      "properties": {
+        "format": { "type": "string", "enum": ["markdown", "json", "both"] },
+        "template": { "type": "string" },
+        "reportPath": { "type": "string" },
+        "dataPath": { "type": "string" },
+        "artifactsDir": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "loginStrategy": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["storage_state", "cookie", "form", "oauth"] },
+        "stateRef": { "type": "string" },
+        "credentialRef": {},
+        "apply": { "type": "string", "enum": ["header", "evaluate"] },
+        "fields": {
+          "type": "object",
+          "properties": {
+            "usernameRefHint": { "type": "object", "additionalProperties": true },
+            "passwordRefHint": { "type": "object", "additionalProperties": true },
+            "submitRefHint": { "type": "object", "additionalProperties": true }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "login": {
+      "type": "object",
+      "properties": {
+        "mode": { "type": "string", "enum": ["none", "manual", "auto", "auto_then_manual"] },
+        "manual": {
+          "type": "object",
+          "properties": {
+            "prompt": { "type": "string" },
+            "confirm": {
+              "type": "object",
+              "properties": {
+                "signals": { "type": "array", "items": { "$ref": "#/$defs/signal" } }
+              },
+              "additionalProperties": true
+            }
+          },
+          "additionalProperties": true
+        },
+        "auto": {
+          "type": "object",
+          "properties": {
+            "strategies": { "type": "array", "items": { "$ref": "#/$defs/loginStrategy" } }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "detect": {
+      "type": "object",
+      "properties": {
+        "loginRequiredSignals": { "type": "array", "items": { "$ref": "#/$defs/signal" } },
+        "loggedInSignals": { "type": "array", "items": { "$ref": "#/$defs/signal" } },
+        "antiBotSignals": { "type": "array", "items": { "$ref": "#/$defs/signal" } }
+      },
+      "additionalProperties": true
+    },
+    "defaultsFile": {
+      "type": "object",
+      "required": ["version", "defaults"],
+      "properties": {
+        "version": { "type": "integer" },
+        "defaults": {
+          "type": "object",
+          "properties": {
+            "scenario": {
+              "type": "object",
+              "properties": {
+                "defaultScenarioId": { "type": "string" }
+              },
+              "additionalProperties": true
+            },
+            "output": { "$ref": "#/$defs/output" },
+            "login": { "$ref": "#/$defs/login" },
+            "detect": { "$ref": "#/$defs/detect" }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+    "scenariosFile": {
+      "type": "object",
+      "required": ["version", "scenarios"],
+      "properties": {
+        "version": { "type": "integer" },
+        "scenarios": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["scenarioId", "priority", "mode"],
+            "properties": {
+              "scenarioId": { "type": "string" },
+              "title": { "type": "string" },
+              "priority": { "type": "integer" },
+              "mode": { "type": "string", "enum": ["read", "write", "mixed"] },
+              "match": {
+                "type": "object",
+                "properties": {
+                  "domains": { "type": "array", "items": { "type": "string" } },
+                  "urlPrefixes": { "type": "array", "items": { "type": "string" } },
+                  "urlRegex": { "type": "array", "items": { "type": "string" } }
+                },
+                "additionalProperties": true
+              },
+              "output": { "$ref": "#/$defs/output" },
+              "login": { "$ref": "#/$defs/login" }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "siteFile": {
+      "type": "object",
+      "required": ["version", "siteKey"],
+      "properties": {
+        "version": { "type": "integer" },
+        "siteKey": { "type": "string" },
+        "match": { "type": "object", "additionalProperties": true },
+        "output": { "$ref": "#/$defs/output" },
+        "login": { "$ref": "#/$defs/login" },
+        "detect": { "$ref": "#/$defs/detect" }
+      },
+      "additionalProperties": true
+    }
+  }
+}

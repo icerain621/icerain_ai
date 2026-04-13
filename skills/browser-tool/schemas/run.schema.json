@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "goclaw.browser-tool.run.schema.json",
+  "title": "browser-tool run.yaml schema",
+  "type": "object",
+  "required": ["run"],
+  "properties": {
+    "run": {
+      "type": "object",
+      "required": ["targetUrl", "siteKey", "steps"],
+      "properties": {
+        "scenario": { "type": "string" },
+        "engine": { "type": "string", "enum": ["auto", "goclaw-browser", "agent-browser"] },
+        "mode": { "type": "string", "enum": ["read", "write", "mixed"] },
+        "targetUrl": { "type": "string" },
+        "siteKey": { "type": "string" },
+        "connection": { "type": "string", "enum": ["auto", "cdp", "local"] },
+        "login": {
+          "type": "object",
+          "properties": {
+            "mode": { "type": "string", "enum": ["none", "manual", "auto", "auto_then_manual"] }
+          },
+          "additionalProperties": true
+        },
+        "output": {
+          "type": "object",
+          "properties": {
+            "format": { "type": "string", "enum": ["markdown", "json", "both"] },
+            "template": { "type": "string" },
+            "reportPath": { "type": "string" },
+            "dataPath": { "type": "string" },
+            "artifactsDir": { "type": "string" }
+          },
+          "additionalProperties": true
+        },
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["kind"],
+            "properties": {
+              "id": { "type": "string" },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "preflight",
+                  "connect",
+                  "open",
+                  "navigate",
+                  "snapshot",
+                  "screenshot",
+                  "ensure_login",
+                  "extract",
+                  "capture_network",
+                  "write_actions",
+                  "record_flow",
+                  "paginate_or_scroll",
+                  "validate",
+                  "report"
+                ]
+              },
+              "mode": { "type": "string", "enum": ["read", "write"] },
+              "with": { "type": "object", "additionalProperties": true }
+            },
+            "additionalProperties": true
+          }
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": false
+}
