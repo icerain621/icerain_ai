@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "name": "mocksite_login_capture",
+  "steps": [
+    {
+      "kind": "login_form",
+      "loginUrl": "http://127.0.0.1:18080/login",
+      "username": "demo",
+      "password": "demo",
+      "usernameSelector": "#login_field",
+      "passwordSelector": "#password",
+      "submitSelector": "#sign_in",
+      "afterSelector": "#app_home"
+    },
+    {
+      "kind": "capture",
+      "captureUrlRegex": "/api/profile",
+      "maxBodyBytes": 1000000
+    },
+    {
+      "kind": "trigger_eval",
+      "js": "fetch('/api/profile').then(r=>r.json()).then(_=>0)",
+      "waitMs": 1200
+    }
+  ]
+}
+

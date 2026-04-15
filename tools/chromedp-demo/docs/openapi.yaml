@@ -1,0 +1,234 @@
+openapi: 3.0.3
+info:
+  title: chromedp-demo HTTP API
+  version: "1.0.0"
+  description: |
+    HTTP API for chromedp-demo (Gin). Provides v0/v1-capture/v2/v2-queue capabilities.
+servers:
+  - url: http://127.0.0.1:19090
+paths:
+  /healthz:
+    get:
+      summary: Health check
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  now: { type: string, format: date-time }
+  /api/v0/run:
+    post:
+      summary: Run v0 (single-page crawl)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RunV0Request"
+      responses:
+        "200":
+          description: Run completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RunResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /api/v1/capture/run:
+    post:
+      summary: Run v1-capture (capture XHR/JSON)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RunV1CaptureRequest"
+      responses:
+        "200":
+          description: Run completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RunResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /api/v2/run:
+    post:
+      summary: Run v2 (workflow for a single URL)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RunV2Request"
+      responses:
+        "200":
+          description: Run completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RunResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /api/v2/queue/start:
+    post:
+      summary: Start v2-queue (async queue + workflow job)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StartV2QueueRequest"
+      responses:
+        "202":
+          description: Job started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StartJobResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /api/jobs/{id}:
+    get:
+      summary: Get job status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Job
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+components:
+  responses:
+    BadRequest:
+      description: Bad request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+    BrowserOptions:
+      type: object
+      properties:
+        headless: { type: boolean, default: true }
+        proxy: { type: string }
+        userAgent: { type: string }
+        userDataDir: { type: string }
+        windowWidth: { type: integer, format: int32, default: 1366 }
+        windowHeight: { type: integer, format: int32, default: 768 }
+    GuardPolicy:
+      type: object
+      properties:
+        allowDomains:
+          type: array
+          items: { type: string }
+        deniedSchemes:
+          type: array
+          items: { type: string }
+          default: ["file", "chrome"]
+        timeoutMs: { type: integer, format: int64 }
+        maxScreenshots: { type: integer, format: int32 }
+        maxHTMLBytes: { type: integer, format: int32 }
+        maxCaptureBytes: { type: integer, format: int32 }
+    FormLogin:
+      type: object
+      properties:
+        loginUrl: { type: string }
+        username: { type: string }
+        password: { type: string }
+        usernameSelector: { type: string }
+        passwordSelector: { type: string }
+        submitSelector: { type: string }
+        afterSelector: { type: string }
+    Capture:
+      type: object
+      properties:
+        captureUrlRegex: { type: string }
+        maxBodyBytes: { type: integer, format: int32 }
+        triggerEval: { type: string }
+        triggerWaitMs: { type: integer, format: int32 }
+        blockImages: { type: boolean }
+    RunV0Request:
+      type: object
+      required: [url, outDir]
+      properties:
+        url: { type: string }
+        outDir: { type: string }
+        browser: { $ref: "#/components/schemas/BrowserOptions" }
+        policy: { $ref: "#/components/schemas/GuardPolicy" }
+        login: { $ref: "#/components/schemas/FormLogin" }
+        capture: { $ref: "#/components/schemas/Capture" }
+    RunV1CaptureRequest:
+      type: object
+      required: [url, outDir, capture]
+      properties:
+        url: { type: string }
+        outDir: { type: string }
+        browser: { $ref: "#/components/schemas/BrowserOptions" }
+        policy: { $ref: "#/components/schemas/GuardPolicy" }
+        login: { $ref: "#/components/schemas/FormLogin" }
+        capture: { $ref: "#/components/schemas/Capture" }
+    RunV2Request:
+      type: object
+      required: [url, outDir, workflowPath]
+      properties:
+        url: { type: string }
+        outDir: { type: string }
+        workflowPath: { type: string }
+        browser: { $ref: "#/components/schemas/BrowserOptions" }
+        policy: { $ref: "#/components/schemas/GuardPolicy" }
+    StartV2QueueRequest:
+      type: object
+      required: [outDir, workflowPath]
+      properties:
+        seedFile: { type: string }
+        dbPath: { type: string }
+        outDir: { type: string }
+        workers: { type: integer, format: int32, default: 2 }
+        maxAttempts: { type: integer, format: int32, default: 3 }
+        workflowPath: { type: string }
+        browser: { $ref: "#/components/schemas/BrowserOptions" }
+        policy: { $ref: "#/components/schemas/GuardPolicy" }
+    RunResponse:
+      type: object
+      properties:
+        outDir: { type: string }
+        result: { type: object, additionalProperties: true }
+    StartJobResponse:
+      type: object
+      properties:
+        jobId: { type: string }
+        outDir: { type: string }
+    Job:
+      type: object
+      properties:
+        id: { type: string }
+        kind: { type: string }
+        status: { type: string, enum: [queued, running, done, failed] }
+        createdAt: { type: string, format: date-time }
+        startedAt: { type: string, format: date-time }
+        endedAt: { type: string, format: date-time }
+        outDir: { type: string }
+        result: { type: object, additionalProperties: true }
+        error: { type: string }
+
